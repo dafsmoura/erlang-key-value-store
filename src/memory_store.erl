@@ -1,5 +1,5 @@
 -module(memory_store).
--export([start/0, store/1, set/3, get/2, clear/2]).
+-export([start/0, store/1, set/3, set/4, get/2, get/3, clear/2, clear/3]).
 
 start() ->
     spawn(memory_store, store, [#{}]).
@@ -26,25 +26,40 @@ store(State) ->
     end.
 
 set(Pid, Key, Value) ->
+    set(Pid, Key, Value, 5000).
+
+set(Pid, Key, Value, Timeout)->
     RequestRef = make_ref(),
     Pid ! {set, Key, Value, self(), RequestRef},
     receive 
         {RequestRef, ok} ->
             ok
+        after Timeout ->
+        {error, timeout}
     end.
 
 get(Pid, Key) ->
+    get(Pid, Key, 5000).
+
+get(Pid, Key, Timeout) ->
     RequestRef = make_ref(),
     Pid ! {get, Key, self(), RequestRef},
     receive
         {RequestRef, Result} ->
             Result
+    after Timeout ->
+        {error, timeout}
     end.
 
 clear(Pid, Key) ->
+    clear(Pid, Key, 5000).
+
+clear(Pid, Key, Timeout) -> 
     RequestRef = make_ref(),
     Pid ! {remove, Key, self(), RequestRef},
     receive
         {RequestRef, Result} ->
             Result
+    after Timeout ->
+        {error, timeout}
     end.
