@@ -33,3 +33,15 @@ get_timeout_test() ->
     Pid = list_to_pid("<0.999.0>"),
     Response = memory_store:get(Pid, "name", 50),
     ?assertEqual({error, timeout}, Response).
+
+monitor_store_down_test() ->
+    Pid = memory_store:start(),
+    Ref = monitor(process, Pid),
+    exit(Pid, kill),
+    Result = receive
+        {'DOWN', Ref, process, Pid, killed} ->
+            ok
+    after 1000 ->
+        timeout
+    end,
+    ?assertEqual(ok, Result).
