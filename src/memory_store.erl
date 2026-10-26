@@ -6,37 +6,45 @@ start() ->
 
 store(State) ->
     receive
-        {set, Key, Value} ->
+        {set, Key, Value, CallerPid, RequestRef} ->
             NewState = store_map:set(State, Key, Value),
+            CallerPid ! {RequestRef, ok},
             store(NewState);
-        {get, Key, CallerPid} ->
-            CallerPid ! store_map:get(State, Key),
+        {get, Key, CallerPid, RequestRef} ->
+            CallerPid ! {RequestRef, store_map:get(State, Key)},
             store(State);
-        {remove, Key, CallerPid} ->
+        {remove, Key, CallerPid, RequestRef} ->
             case maps:find(Key, State) of
                 {ok, _Value} ->
                     NewState = store_map:remove(State, Key),
-                    CallerPid ! ok,
+                    CallerPid ! {RequestRef, ok},
                     store(NewState);
                 error ->
-                    CallerPid ! not_found,
+                    CallerPid ! {RequestRef, not_found},
                     store(State)
             end
     end.
 
 set(Pid, Key, Value) ->
-    Pid ! {set, Key, Value}.
+    RequestRef = make_ref(),
+    Pid ! {set, Key, Value, self(), RequestRef},
+    receive 
+        {RequestRef, ok} ->
+            ok
+    end.
 
 get(Pid, Key) ->
-    Pid ! {get, Key, self()},
+    RequestRef = make_ref(),
+    Pid ! {get, Key, self(), RequestRef},
     receive
-        Result ->
+        {RequestRef, Result} ->
             Result
     end.
 
 clear(Pid, Key) ->
-    Pid ! {remove, Key, self()},
+    RequestRef = make_ref(),
+    Pid ! {remove, Key, self(), RequestRef},
     receive
-        Result ->
+        {RequestRef, Result} ->
             Result
     end.
