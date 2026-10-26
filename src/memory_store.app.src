@@ -1,0 +1,8 @@
+{application, memory_store,
+ [
+  {description, "In-memory key-value store"},
+  {vsn, "0.1.0"},
+  {modules, [memory_store, store_map]},
+  {registered, []},
+  {applications, [kernel, stdlib]}
+ ]}.
