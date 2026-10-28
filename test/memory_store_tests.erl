@@ -3,9 +3,16 @@
 
 set_get_test() ->
     Pid = memory_store:start(),
-    memory_store:set(Pid, "name", "David"),
+    memory_store:set(Pid, "name", "John"),
     Name = memory_store:get(Pid, "name"),
-    ?assertEqual("David", Name).
+    ?assertEqual("John", Name).
+
+overwrite_test() ->
+    Pid = memory_store:start(),
+    memory_store:set(Pid, "name", "John"),
+    memory_store:set(Pid, "name", "Alice"),
+    Name = memory_store:get(Pid, "name"),
+    ?assertEqual("Alice", Name).
 
 get_missing_key_test() ->
     Pid = memory_store:start(),
@@ -14,7 +21,7 @@ get_missing_key_test() ->
 
 clear_test() ->
     Pid = memory_store:start(),
-    memory_store:set(Pid, "name", "David"),
+    memory_store:set(Pid, "name", "John"),
     Response = memory_store:clear(Pid, "name"),
     ?assertEqual(ok, Response),
     Name = memory_store:get(Pid, "name"),
@@ -23,9 +30,9 @@ clear_test() ->
 independent_stores_test() ->
     Pid1 = memory_store:start(),
     Pid2 = memory_store:start(),
-    memory_store:set(Pid1, "name", "David"),
+    memory_store:set(Pid1, "name", "John"),
     Name1 = memory_store:get(Pid1, "name"),
-    ?assertEqual("David", Name1),
+    ?assertEqual("John", Name1),
     Name2 = memory_store:get(Pid2, "name"),
     ?assertEqual(not_found, Name2).
 
