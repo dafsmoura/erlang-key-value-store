@@ -45,3 +45,29 @@ monitor_store_down_test() ->
         timeout
     end,
     ?assertEqual(ok, Result).
+
+concurrency_test() ->
+    StorePid = memory_store:start(),
+    TestPid = self(),
+    [
+        spawn(fun() -> 
+            memory_store:set(StorePid, Number, Number), 
+            TestPid ! {done, Number} 
+        end) 
+        || Number <- lists:seq(1, 20)
+    ],
+    ?assertEqual(done, wait_for_workers(20)),
+    [
+        ?assertEqual(Number, memory_store:get(StorePid, Number))
+        || Number <- lists:seq(1, 20)
+    ].
+
+wait_for_workers(0) ->
+    done;
+wait_for_workers(N) ->
+    receive
+        {done, _Number} ->
+            wait_for_workers(N-1)
+    after 5000 ->
+        timeout
+    end.
