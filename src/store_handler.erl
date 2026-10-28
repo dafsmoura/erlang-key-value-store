@@ -13,7 +13,7 @@ init(Req, [StorePid]) ->
         _ ->
             Req2 = cowboy_req:reply(
                 405, 
-                #{<<"content-type">> => <<"text/plain">>},
+                #{<<"content-type">> => <<"text/plain">>, <<"allow">> => <<"GET, PUT, DELETE">>},
                 <<"Method Not Allowed">>,
                 Req
             ),
@@ -42,10 +42,11 @@ handle_get(Req, StorePid) ->
             ),
             {ok, Req2, StorePid};
         Value ->
+            Body = list_to_binary("key=" ++ Key ++ "\nvalue=" ++ Value),
             Req2 = cowboy_req:reply(
                 200, 
                 #{<<"content-type">> => <<"text/plain">>},
-                Value,
+                Body,
                 Req
             ),
             {ok, Req2, StorePid}
